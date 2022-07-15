@@ -8,8 +8,8 @@ import readShebang from './index.js'
 
 const TEST_HASH_BANG = '#!/usr/bin/env node'
 const MAX_HASH_BANG_LENGTH = 150
-const JUNK_PIECES_SIZE = 10 * 1024 // 10KB
-const JUNK_STRING = '-'.repeat(JUNK_PIECES_SIZE)
+const JUNK_PIECE_SIZE = 10 * 1024 // 10KB
+const JUNK_STRING = '-'.repeat(JUNK_PIECE_SIZE)
 
 const getShebang = async (options) => {
   if (typeof options === 'string') {
@@ -25,7 +25,7 @@ const getShebang = async (options) => {
 
   if (junkSize) {
     const writableStream = fs.createWriteStream(file, {flags: 'a'})
-    for (let index = 0; index < junkSize / JUNK_PIECES_SIZE; index++) {
+    for (let index = 0; index < junkSize / JUNK_PIECE_SIZE; index++) {
       writableStream.write(JUNK_STRING)
     }
     writableStream.end()
