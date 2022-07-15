@@ -28,15 +28,16 @@ const getShebang = async (options) => {
   if (junkSize) {
     await new Promise((resolve) => {
       const writableStream = fs.createWriteStream(file, {flags: 'a'})
-      for (let index = 0; index < junkSize / JUNK_PIECE_SIZE; index++) {
+      const pieces = Math.floor(junkSize / JUNK_PIECE_SIZE)
+      for (let index = 0; index < pieces; index++) {
         writableStream.write(JUNK_DATA)
       }
       writableStream.on('finish', resolve)
-      writableStream.end()
+      writableStream.end('.'.repeat(junkSize % JUNK_PIECE_SIZE))
     })
 
     const stat = await fsPromises.stat(file)
-    assert.equal(stat.size, content.length + junkSize)
+    assert(stat.size, content.length + junkSize)
   } else {
     assert.equal(await fsPromises.readFile(file, 'utf8'), content)
   }
