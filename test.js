@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import fs, {promises as fsPromises} from 'node:fs'
 import url from 'node:url'
 import {Buffer} from 'node:buffer'
+import process from 'node:process'
 import test from 'node:test'
 import writeTemporaryFile from 'temp-write'
 import {isCI} from 'ci-info'
@@ -28,16 +29,16 @@ const getShebang = async (options) => {
   if (junkSize) {
     await new Promise((resolve) => {
       const writableStream = fs.createWriteStream(file, {flags: 'a'})
+      writableStream.on('finish', resolve)
       const pieces = Math.floor(junkSize / JUNK_PIECE_SIZE)
       for (let index = 0; index < pieces; index++) {
         writableStream.write(JUNK_DATA)
       }
-      writableStream.on('finish', resolve)
       writableStream.end('.'.repeat(junkSize % JUNK_PIECE_SIZE))
     })
 
     const stat = await fsPromises.stat(file)
-    assert(stat.size, content.length + junkSize)
+    assert.equal(stat.size, content.length + junkSize)
   } else {
     assert.equal(await fsPromises.readFile(file, 'utf8'), content)
   }
@@ -92,7 +93,10 @@ test('contents', async () => {
 test('performance', async () => {
   // 4GB on CI, 5MB on local
   const SIZE = (isCI ? 4 * 1024 : 5) * 1024 * 1024
-  const MAXIMUM_TIME = isCI ? 200 : 10
+  let MAXIMUM_TIME = 10
+  if (isCI) {
+    MAXIMUM_TIME = process.platform === 'win32' ? 1500 : 200
+  }
 
   // eslint-disable-next-line no-lone-blocks
   {
