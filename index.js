@@ -4,7 +4,7 @@ import {createInterface} from 'node:readline'
 async function readShebang(file) {
   const readline = createInterface({
     input: createReadStream(file, {encoding: 'utf8', end: 149}),
-    crlfDelay: Number.POSITIVE_INFINITY,
+    crlfDelay: 0,
   })
 
   const {value: firstLine} = await readline[Symbol.asyncIterator]().next()
