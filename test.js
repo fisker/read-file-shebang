@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs, {promises as fsPromises} from 'node:fs'
 import url from 'node:url'
+import {Buffer} from 'node:buffer'
 import test from 'node:test'
 import writeTemporaryFile from 'temp-write'
 import {isCI} from 'ci-info'
@@ -8,8 +9,8 @@ import readShebang from './index.js'
 
 const TEST_HASH_BANG = '#!/usr/bin/env node'
 const MAX_HASH_BANG_LENGTH = 150
-const JUNK_PIECES_SIZE = 10 * 1024 // 10KB
-const JUNK_STRING = '-'.repeat(JUNK_PIECES_SIZE)
+const JUNK_PIECE_SIZE = 10 * 1024 // 10KB
+const JUNK_DATA = '-'.repeat(JUNK_PIECE_SIZE)
 
 const getShebang = async (options) => {
   if (typeof options === 'string') {
@@ -19,16 +20,23 @@ const getShebang = async (options) => {
   const {measureTime, junkSize, content} = {
     measureTime: false,
     junkSize: 0,
+    content: '',
     ...options,
   }
   const file = await writeTemporaryFile(content)
 
   if (junkSize) {
-    const writableStream = fs.createWriteStream(file, {flags: 'a'})
-    for (let index = 0; index < junkSize / JUNK_PIECES_SIZE; index++) {
-      writableStream.write(JUNK_STRING)
-    }
-    writableStream.end()
+    await new Promise((resolve) => {
+      const writableStream = fs.createWriteStream(file, {flags: 'a'})
+      for (let index = 0; index < junkSize / JUNK_PIECE_SIZE; index++) {
+        writableStream.write(JUNK_DATA)
+      }
+      writableStream.on('finish', resolve)
+      writableStream.end()
+    })
+
+    const stat = await fsPromises.stat(file)
+    assert.equal(stat.size, content.length + junkSize)
   } else {
     assert.equal(await fsPromises.readFile(file, 'utf8'), content)
   }
@@ -37,7 +45,7 @@ const getShebang = async (options) => {
   const result = await readShebang(file)
   const time = performance.now() - startTime
 
-  // await fsPromises.unlink(file)
+  await fsPromises.unlink(file)
 
   return measureTime ? {result, time} : result
 }
@@ -83,6 +91,7 @@ test('contents', async () => {
 test('performance', async () => {
   // 4GB on CI, 5MB on local
   const SIZE = (isCI ? 4 * 1024 : 5) * 1024 * 1024
+  const MAXIMUM_TIME = isCI ? 200 : 10
 
   // eslint-disable-next-line no-lone-blocks
   {
@@ -93,7 +102,10 @@ test('performance', async () => {
     })
 
     assert.equal(result, TEST_HASH_BANG)
-    assert(time < 10, `Should get result in less than 10ms, got ${time}`)
+    assert(
+      time < MAXIMUM_TIME,
+      `Should get result in less than ${MAXIMUM_TIME}ms, got ${time}`,
+    )
   }
 
   // eslint-disable-next-line no-lone-blocks
@@ -105,7 +117,10 @@ test('performance', async () => {
     })
 
     assert.equal(result.length, MAX_HASH_BANG_LENGTH)
-    assert(time < 10, `Should get result in less than 10ms, got ${time}`)
+    assert(
+      time < MAXIMUM_TIME,
+      `Should get result in less than ${MAXIMUM_TIME}ms, got ${time}`,
+    )
   }
 
   // eslint-disable-next-line no-lone-blocks
@@ -117,6 +132,9 @@ test('performance', async () => {
     })
 
     assert.equal(result, undefined)
-    assert(time < 10, `Should get result in less than 10ms, got ${time}`)
+    assert(
+      time < MAXIMUM_TIME,
+      `Should get result in less than ${MAXIMUM_TIME}ms, got ${time}`,
+    )
   }
 })
