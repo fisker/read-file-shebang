@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import fs from 'node:fs/promises'
+import fs, {promises as fsPromises} from 'node:fs'
 import url from 'node:url'
 import test from 'node:test'
 import writeTemporaryFile from 'temp-write'
@@ -8,18 +8,36 @@ import readShebang from './index.js'
 
 const TEST_HASH_BANG = '#!/usr/bin/env node'
 const MAX_HASH_BANG_LENGTH = 150
+const JUNK_PIECES_SIZE = 10 * 1024 // 10KB
+const JUNK_STRING = '-'.repeat(JUNK_PIECES_SIZE)
 
-const getShebang = async (content, options) => {
-  const {measureTime} = {measureTime: false, ...options}
+const getShebang = async (options) => {
+  if (typeof options === 'string') {
+    options = {content: options}
+  }
+
+  const {measureTime, junkSize, content} = {
+    measureTime: false,
+    junkSize: 0,
+    ...options,
+  }
   const file = await writeTemporaryFile(content)
 
-  assert.equal(await fs.readFile(file, 'utf8'), content)
+  if (junkSize) {
+    const writableStream = fs.createWriteStream(file, {flags: 'a'})
+    for (let index = 0; index < junkSize / JUNK_PIECES_SIZE; index++) {
+      writableStream.write(JUNK_STRING)
+    }
+    writableStream.end()
+  } else {
+    assert.equal(await fsPromises.readFile(file, 'utf8'), content)
+  }
 
   const startTime = performance.now()
   const result = await readShebang(file)
   const time = performance.now() - startTime
 
-  await fs.unlink(file)
+  // await fsPromises.unlink(file)
 
   return measureTime ? {result, time} : result
 }
@@ -31,7 +49,7 @@ test('main', async () => {
   assert.equal(await readShebang(url.pathToFileURL(fixture)), TEST_HASH_BANG)
   // `fs.createReadStream` doesn't accept url string
   await assert.rejects(() => readShebang(url.pathToFileURL(fixture).href))
-  await fs.unlink(fixture)
+  await fsPromises.unlink(fixture)
 
   const promise = readShebang(new URL('./non-existing-file', import.meta.url))
   assert.equal(typeof promise.then, 'function')
@@ -63,15 +81,16 @@ test('contents', async () => {
 })
 
 test('performance', async () => {
-  // 2GB on CI, 5MB on local
-  const SIZE = (isCI ? 2 * 1024 : 5) * 1024 * 1024
+  // 4GB on CI, 5MB on local
+  const SIZE = (isCI ? 4 * 1024 : 5) * 1024 * 1024
 
   // eslint-disable-next-line no-lone-blocks
   {
-    const {result, time} = await getShebang(
-      `${TEST_HASH_BANG}\n${'-'.repeat(SIZE)}`,
-      {measureTime: true},
-    )
+    const {result, time} = await getShebang({
+      content: `${TEST_HASH_BANG}\n`,
+      measureTime: true,
+      junkSize: SIZE,
+    })
 
     assert.equal(result, TEST_HASH_BANG)
     assert(time < 10, `Should get result in less than 10ms, got ${time}`)
@@ -79,10 +98,11 @@ test('performance', async () => {
 
   // eslint-disable-next-line no-lone-blocks
   {
-    const {result, time} = await getShebang(
-      `${TEST_HASH_BANG}${'-'.repeat(SIZE)}`,
-      {measureTime: true},
-    )
+    const {result, time} = await getShebang({
+      content: TEST_HASH_BANG,
+      measureTime: true,
+      junkSize: SIZE,
+    })
 
     assert.equal(result.length, MAX_HASH_BANG_LENGTH)
     assert(time < 10, `Should get result in less than 10ms, got ${time}`)
@@ -90,10 +110,11 @@ test('performance', async () => {
 
   // eslint-disable-next-line no-lone-blocks
   {
-    const {result, time} = await getShebang(
-      `${'-'.repeat(SIZE)}${TEST_HASH_BANG}`,
-      {measureTime: true},
-    )
+    const {result, time} = await getShebang({
+      content: '',
+      measureTime: true,
+      junkSize: SIZE,
+    })
 
     assert.equal(result, undefined)
     assert(time < 10, `Should get result in less than 10ms, got ${time}`)
