@@ -28,6 +28,5 @@ yarn add read-file-shebang
 import readShebang from 'read-file-shebang'
 
 console.log(await readShebang('/path/to/file'))
-
 // -> #!/usr/bin/env node
 ```

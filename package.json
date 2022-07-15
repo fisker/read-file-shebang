@@ -39,6 +39,12 @@
     "test-coverage": "c8 yarn test",
     "release": "run-s test dist"
   },
+  "c8": {
+    "reporter": [
+      "lcov",
+      "text"
+    ]
+  },
   "devDependencies": {
     "@fisker/eslint-config": "10.1.5",
     "@fisker/lint-staged-config": "3.1.5",
