@@ -10,7 +10,7 @@ import readShebang from './index.js'
 const TEST_HASH_BANG = '#!/usr/bin/env node'
 const MAX_HASH_BANG_LENGTH = 150
 const JUNK_PIECE_SIZE = 10 * 1024 // 10KB
-const JUNK_DATA = '-'.repeat(JUNK_PIECE_SIZE)
+const JUNK_DATA = Buffer.alloc(JUNK_PIECE_SIZE).fill('.')
 
 const getShebang = async (options) => {
   if (typeof options === 'string') {
