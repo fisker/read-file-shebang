@@ -1,7 +1,7 @@
-import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import url from 'node:url'
+import test from 'node:test'
 import writeTemporaryFile from 'temp-write'
 import {isCI} from 'ci-info'
 import readShebang from './index.js'
@@ -56,15 +56,17 @@ test('contents', async () => {
   assert.equal(await getShebang(`${TEST_HASH_BANG}\r\n`), TEST_HASH_BANG)
 
   assert.equal(
+    // eslint-disable-next-line unicorn/no-await-expression-member
     (await getShebang(`#!${'-'.repeat(1024)}`)).length,
     MAX_HASH_BANG_LENGTH,
   )
 })
 
 test('performance', async () => {
-  // 5GB on CI, 5MB on local
-  const SIZE = (isCI ? 5 * 1024 : 5) * 1024 * 1024
+  // 4GB on CI, 5MB on local
+  const SIZE = (isCI ? 4 * 1024 : 5) * 1024 * 1024
 
+  // eslint-disable-next-line no-lone-blocks
   {
     const {result, time} = await getShebang(
       `${TEST_HASH_BANG}\n${'-'.repeat(SIZE)}`,
@@ -75,6 +77,7 @@ test('performance', async () => {
     assert(time < 10, `Should get result in less than 10ms, got ${time}`)
   }
 
+  // eslint-disable-next-line no-lone-blocks
   {
     const {result, time} = await getShebang(
       `${TEST_HASH_BANG}${'-'.repeat(SIZE)}`,
@@ -85,6 +88,7 @@ test('performance', async () => {
     assert(time < 10, `Should get result in less than 10ms, got ${time}`)
   }
 
+  // eslint-disable-next-line no-lone-blocks
   {
     const {result, time} = await getShebang(
       `${'-'.repeat(SIZE)}${TEST_HASH_BANG}`,
