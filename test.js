@@ -63,8 +63,8 @@ test('contents', async () => {
 })
 
 test('performance', async () => {
-  // 4GB on CI, 5MB on local
-  const SIZE = (isCI ? 4 * 1024 : 5) * 1024 * 1024
+  // 2GB on CI, 5MB on local
+  const SIZE = (isCI ? 2 * 1024 : 5) * 1024 * 1024
 
   // eslint-disable-next-line no-lone-blocks
   {
