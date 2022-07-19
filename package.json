@@ -51,7 +51,7 @@
     "@fisker/markdownlint-cli2-config": "0.0.3",
     "@fisker/prettier-config": "5.0.6",
     "@fisker/stylelint-config": "5.0.17",
-    "c8": "7.11.3",
+    "c8": "7.12.0",
     "ci-info": "3.3.2",
     "eslint": "8.19.0",
     "husky": "8.0.1",
