@@ -53,7 +53,7 @@
     "@fisker/stylelint-config": "5.3.1",
     "c8": "8.0.1",
     "ci-info": "3.9.0",
-    "eslint": "8.39.0",
+    "eslint": "9.24.0",
     "husky": "8.0.3",
     "lint-staged": "15.0.1",
     "markdownlint-cli2": "0.10.0",
