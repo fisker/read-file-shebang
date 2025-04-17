@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
-import fs, {promises as fsPromises} from 'node:fs'
-import url from 'node:url'
 import {Buffer} from 'node:buffer'
+import fs, {promises as fsPromises} from 'node:fs'
 import process from 'node:process'
 import test from 'node:test'
-import writeTemporaryFile from 'temp-write'
+import url from 'node:url'
 import {isCI} from 'ci-info'
+import writeTemporaryFile from 'temp-write'
 import readShebang from './index.js'
 
 const TEST_HASH_BANG = '#!/usr/bin/env node'
@@ -98,7 +98,7 @@ test('performance', async () => {
     MAXIMUM_TIME = process.platform === 'win32' ? 1500 : 200
   }
 
-  // eslint-disable-next-line no-lone-blocks
+   
   {
     const {result, time} = await getShebang({
       content: `${TEST_HASH_BANG}\n`,
@@ -107,13 +107,13 @@ test('performance', async () => {
     })
 
     assert.equal(result, TEST_HASH_BANG)
-    assert(
+    assert.ok(
       time < MAXIMUM_TIME,
       `Should get result in less than ${MAXIMUM_TIME}ms, got ${time}`,
     )
   }
 
-  // eslint-disable-next-line no-lone-blocks
+   
   {
     const {result, time} = await getShebang({
       content: TEST_HASH_BANG,
@@ -122,13 +122,13 @@ test('performance', async () => {
     })
 
     assert.equal(result.length, MAX_HASH_BANG_LENGTH)
-    assert(
+    assert.ok(
       time < MAXIMUM_TIME,
       `Should get result in less than ${MAXIMUM_TIME}ms, got ${time}`,
     )
   }
 
-  // eslint-disable-next-line no-lone-blocks
+   
   {
     const {result, time} = await getShebang({
       content: '',
@@ -137,7 +137,7 @@ test('performance', async () => {
     })
 
     assert.equal(result, undefined)
-    assert(
+    assert.ok(
       time < MAXIMUM_TIME,
       `Should get result in less than ${MAXIMUM_TIME}ms, got ${time}`,
     )
