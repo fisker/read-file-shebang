@@ -54,7 +54,7 @@
     "@fisker/prettier-config": "5.1.5",
     "@fisker/stylelint-config": "5.3.1",
     "c8": "8.0.1",
-    "ci-info": "3.9.0",
+    "ci-info": "4.2.0",
     "del-cli": "6.0.0",
     "eslint": "9.24.0",
     "husky": "9.1.7",
