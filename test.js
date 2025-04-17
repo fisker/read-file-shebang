@@ -98,7 +98,6 @@ test('performance', async () => {
     MAXIMUM_TIME = process.platform === 'win32' ? 1500 : 200
   }
 
-   
   {
     const {result, time} = await getShebang({
       content: `${TEST_HASH_BANG}\n`,
@@ -113,7 +112,6 @@ test('performance', async () => {
     )
   }
 
-   
   {
     const {result, time} = await getShebang({
       content: TEST_HASH_BANG,
@@ -128,7 +126,6 @@ test('performance', async () => {
     )
   }
 
-   
   {
     const {result, time} = await getShebang({
       content: '',
